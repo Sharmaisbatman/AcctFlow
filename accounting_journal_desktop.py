@@ -504,8 +504,8 @@ class ModernAccountingJournal:
         for child in self.accounts_frame.winfo_children():
             if hasattr(child, 'amount_entry') and hasattr(child, 'type_combo'):
                 try:
-                    amount = float(child.amount_entry.get() or 0)
-                    acc_type = child.type_combo.get()
+                    amount = float(getattr(child, 'amount_entry').get() or 0)
+                    acc_type = getattr(child, 'type_combo').get()
                     
                     if acc_type == "Debit":
                         total_debit += amount
@@ -523,9 +523,15 @@ class ModernAccountingJournal:
         
         # Change difference color based on balance
         if difference < 0.01:
-            self.diff_total_label.master.configure(fg_color=self.colors['success'])
+            try:
+                self.diff_total_label.master.configure(fg_color=self.colors['success'])
+            except:
+                pass
         else:
-            self.diff_total_label.master.configure(fg_color=self.colors['warning'])
+            try:
+                self.diff_total_label.master.configure(fg_color=self.colors['warning'])
+            except:
+                pass
             
     def save_entry(self):
         """Save the current journal entry"""
@@ -537,10 +543,10 @@ class ModernAccountingJournal:
         accounts = []
         for child in self.accounts_frame.winfo_children():
             if hasattr(child, 'name_entry') and hasattr(child, 'type_combo') and hasattr(child, 'amount_entry'):
-                name = child.name_entry.get().strip()
-                acc_type = child.type_combo.get()
+                name = getattr(child, 'name_entry').get().strip()
+                acc_type = getattr(child, 'type_combo').get()
                 try:
-                    amount = float(child.amount_entry.get() or 0)
+                    amount = float(getattr(child, 'amount_entry').get() or 0)
                     if name and acc_type in ["Debit", "Credit"] and amount > 0:
                         accounts.append({
                             'name': name,
@@ -595,10 +601,10 @@ class ModernAccountingJournal:
         
         for child in self.accounts_frame.winfo_children():
             if hasattr(child, 'name_entry') and hasattr(child, 'type_combo') and hasattr(child, 'amount_entry'):
-                name = child.name_entry.get().strip()
-                acc_type = child.type_combo.get()
+                name = getattr(child, 'name_entry').get().strip()
+                acc_type = getattr(child, 'type_combo').get()
                 try:
-                    amount = float(child.amount_entry.get() or 0)
+                    amount = float(getattr(child, 'amount_entry').get() or 0)
                     if name and acc_type in ["Debit", "Credit"] and amount > 0:
                         valid_accounts += 1
                         if acc_type == "Debit":
@@ -641,9 +647,9 @@ class ModernAccountingJournal:
         # Clear remaining rows
         for child in children[:2]:
             if hasattr(child, 'name_entry'):
-                child.name_entry.delete(0, tk.END)
-                child.type_combo.set("Select Type")
-                child.amount_entry.delete(0, tk.END)
+                getattr(child, 'name_entry').delete(0, tk.END)
+                getattr(child, 'type_combo').set("Select Type")
+                getattr(child, 'amount_entry').delete(0, tk.END)
                 
         self.update_totals()
         self.date_entry.focus()
@@ -813,7 +819,7 @@ class ModernAccountingJournal:
             title="Save Journal Entries",
             defaultextension=".csv",
             filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
-            initialname=f"journal_entries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            initialfile=f"journal_entries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         )
         
         if filename:
