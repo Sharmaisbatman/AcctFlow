@@ -3,31 +3,31 @@
 {% block title %}New Entry - Accounting Pro{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid">
     <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <div class="card">
-                <div class="card-header">
-                    <h4><i class="fas fa-plus-circle me-2"></i>New Journal Entry</h4>
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header py-2">
+                    <h5 class="mb-1"><i class="fas fa-plus-circle me-2"></i>New Journal Entry</h5>
                     <small class="text-muted">Create a new double-entry journal entry</small>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body p-3">
                     <form method="POST" action="{{ url_for('add_entry') }}" id="entryForm">
                         <!-- Date and Narration -->
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <label for="entry_date" class="form-label fw-bold">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label for="entry_date" class="form-label fw-bold small">
                                     <i class="fas fa-calendar me-1"></i>Date
                                 </label>
-                                <input type="date" class="form-control form-control-lg" 
+                                <input type="date" class="form-control form-control-sm" 
                                        id="entry_date" name="entry_date" 
                                        value="{{ today_date }}" required>
                             </div>
-                            <div class="col-md-8">
-                                <label for="narration" class="form-label fw-bold">
+                            <div class="col-md-9">
+                                <label for="narration" class="form-label fw-bold small">
                                     <i class="fas fa-comment me-1"></i>Narration
                                 </label>
-                                <input type="text" class="form-control form-control-lg" 
+                                <input type="text" class="form-control form-control-sm" 
                                        id="narration" name="narration" 
                                        placeholder="Enter transaction description..." 
                                        style="background: linear-gradient(135deg, #fff9c4 0%, #fff3b8 100%);"
@@ -36,42 +36,42 @@
                         </div>
 
                         <!-- Accounts Section -->
-                        <div class="mb-4">
-                            <h5 class="section-title mb-3">
+                        <div class="mb-3">
+                            <h6 class="section-title mb-2">
                                 <i class="fas fa-list me-2"></i>Account Entries
-                            </h5>
+                            </h6>
                             
                             <div id="accountsContainer">
                                 <!-- Account rows will be added by JavaScript -->
                             </div>
 
-                            <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="addAccountBtn">
+                            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addAccountBtn">
                                 <i class="fas fa-plus me-1"></i>Add Account
                             </button>
                         </div>
 
                         <!-- Running Totals -->
-                        <div class="row mb-4">
+                        <div class="row mb-3">
                             <div class="col-md-12">
-                                <div class="p-3 rounded" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 2px solid #dee2e6;">
-                                    <h6 class="mb-3"><i class="fas fa-calculator me-2"></i>Running Totals</h6>
+                                <div class="p-2 rounded" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #dee2e6;">
+                                    <h6 class="mb-2 small"><i class="fas fa-calculator me-2"></i>Running Totals</h6>
                                     <div class="row text-center">
                                         <div class="col-md-4">
-                                            <div class="p-2 rounded text-white" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                                            <div class="p-1 rounded text-white" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
                                                 <small>Total Debit</small>
-                                                <div class="fs-5 fw-bold" id="totalDebit">₹0.00</div>
+                                                <div class="fw-bold" id="totalDebit">₹0.00</div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="p-2 rounded text-white" style="background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);">
+                                            <div class="p-1 rounded text-white" style="background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);">
                                                 <small>Total Credit</small>
-                                                <div class="fs-5 fw-bold" id="totalCredit">₹0.00</div>
+                                                <div class="fw-bold" id="totalCredit">₹0.00</div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="p-2 rounded text-white" id="differenceBox" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);">
+                                            <div class="p-1 rounded text-white" id="differenceBox" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);">
                                                 <small>Difference</small>
-                                                <div class="fs-5 fw-bold" id="totalDifference">₹0.00</div>
+                                                <div class="fw-bold" id="totalDifference">₹0.00</div>
                                             </div>
                                         </div>
                                     </div>
@@ -81,10 +81,10 @@
 
                         <!-- Submit Buttons -->
                         <div class="text-center">
-                            <button type="submit" class="btn btn-success btn-lg px-5 me-3">
+                            <button type="submit" class="btn btn-success px-4 me-3">
                                 <i class="fas fa-save me-2"></i>Save Entry
                             </button>
-                            <button type="button" class="btn btn-warning btn-lg px-5" id="clearFormBtn">
+                            <button type="button" class="btn btn-warning px-4" id="clearFormBtn">
                                 <i class="fas fa-undo me-2"></i>Clear Form
                             </button>
                         </div>
@@ -107,12 +107,56 @@
 <script>
 // Account suggestions
 const commonAccounts = [
-    'Cash', 'Bank', 'Capital', 'Sales', 'Purchases', 'Rent Expense', 'Salary Expense',
-    'Electricity Expense', 'Office Expenses', 'Furniture', 'Building', 'Land',
-    'Accounts Receivable', 'Accounts Payable', 'Stock', 'Interest Expense', 
-    'Commission Income', 'Discount Allowed', 'Discount Received', 'Fees Earned',
-    'Advertisement Expense', 'Insurance Expense', 'Telephone Expense', 'Transport Expense',
-    'Depreciation Expense', 'Bad Debts', 'Provision for Bad Debts', 'Reserve Fund'
+    // Assets
+    'Cash', 'Petty Cash', 'Bank', 'SBI Bank', 'HDFC Bank', 'ICICI Bank', 'Axis Bank',
+    'Accounts Receivable', 'Sundry Debtors', 'Trade Receivables', 'Notes Receivable',
+    'Stock', 'Inventory', 'Raw Materials', 'Finished Goods', 'Work in Progress',
+    'Furniture & Fixtures', 'Office Equipment', 'Computer', 'Laptop', 'Machinery',
+    'Building', 'Land', 'Vehicle', 'Motor Car', 'Truck', 'Bike',
+    'Investment', 'Fixed Deposit', 'Mutual Fund', 'Shares', 'Bonds',
+    'Prepaid Rent', 'Prepaid Insurance', 'Security Deposit', 'Advance to Supplier',
+    'Goodwill', 'Patent', 'Trademark', 'Software', 'Licenses',
+    
+    // Liabilities
+    'Accounts Payable', 'Sundry Creditors', 'Trade Payables', 'Notes Payable',
+    'Bank Loan', 'Personal Loan', 'Home Loan', 'Car Loan', 'Working Capital Loan',
+    'Credit Card Outstanding', 'Overdraft', 'Line of Credit',
+    'Accrued Expenses', 'Outstanding Expenses', 'Salary Payable', 'Interest Payable',
+    'Tax Payable', 'GST Payable', 'TDS Payable', 'Professional Tax Payable',
+    'Unearned Revenue', 'Advance from Customer', 'Security from Customer',
+    
+    // Equity
+    'Capital', 'Owner\'s Capital', 'Share Capital', 'Retained Earnings',
+    'Drawing', 'Owner\'s Drawing', 'Reserve Fund', 'General Reserve',
+    'Revaluation Reserve', 'Capital Reserve', 'Surplus',
+    
+    // Revenue/Income
+    'Sales', 'Sales Revenue', 'Service Revenue', 'Consulting Income',
+    'Commission Received', 'Interest Received', 'Rent Received', 'Dividend Received',
+    'Discount Received', 'Fees Earned', 'Professional Fees', 'Royalty Income',
+    'Other Income', 'Miscellaneous Income', 'Gain on Sale of Asset',
+    
+    // Expenses
+    'Purchases', 'Purchase Returns', 'Cost of Goods Sold', 'Opening Stock', 'Closing Stock',
+    'Salary Expense', 'Wages', 'Bonus', 'DA', 'HRA', 'Overtime', 'Staff Welfare',
+    'Rent Expense', 'Office Rent', 'Godown Rent', 'Factory Rent',
+    'Electricity Expense', 'Water Charges', 'Gas Charges', 'Internet Expense',
+    'Telephone Expense', 'Mobile Charges', 'Postage & Courier',
+    'Office Expenses', 'Office Supplies', 'Stationery', 'Printing',
+    'Advertisement Expense', 'Marketing Expense', 'Promotion Expense',
+    'Travel Expense', 'Conveyance', 'Hotel Expense', 'Fuel Expense',
+    'Transport Expense', 'Freight', 'Loading & Unloading', 'Cartage',
+    'Insurance Expense', 'Vehicle Insurance', 'Fire Insurance', 'Medical Insurance',
+    'Professional Fees', 'Audit Fees', 'Legal Fees', 'Consultant Fees',
+    'Bank Charges', 'Interest Expense', 'Loan Interest', 'Bank Interest',
+    'Repairs & Maintenance', 'Computer Maintenance', 'Vehicle Repairs',
+    'Depreciation Expense', 'Depreciation on Building', 'Depreciation on Furniture',
+    'Bad Debts', 'Provision for Bad Debts', 'Doubtful Debts',
+    'Entertainment Expense', 'Refreshment', 'Business Lunch',
+    'Training Expense', 'Conference Expense', 'Subscription',
+    'License Fees', 'Registration Fees', 'Penalty', 'Fine',
+    'Security Charges', 'Cleaning Charges', 'Housekeeping',
+    'Miscellaneous Expense', 'General Expense', 'Other Expense'
 ];
 
 let accountCounter = 0;
@@ -139,17 +183,17 @@ function addAccountRow() {
     
     const container = document.getElementById('accountsContainer');
     const accountRow = document.createElement('div');
-    accountRow.className = 'account-row p-3 mb-3 rounded';
+    accountRow.className = 'account-row p-2 mb-2 rounded';
     accountRow.style.background = 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)';
-    accountRow.style.border = '2px solid #e9ecef';
+    accountRow.style.border = '1px solid #e9ecef';
     accountRow.style.transition = 'all 0.3s ease';
     accountRow.dataset.accountId = accountCounter;
     
     accountRow.innerHTML = `
         <div class="row align-items-center">
-            <div class="col-md-4 mb-2">
-                <label class="form-label fw-bold">Account Name</label>
-                <input type="text" class="form-control account-name-input" 
+            <div class="col-md-5 mb-2">
+                <label class="form-label fw-bold small">Account Name</label>
+                <input type="text" class="form-control form-control-sm account-name-input" 
                        name="account_name" 
                        placeholder="Enter account name..."
                        list="accountSuggestions${accountCounter}" required>
@@ -157,17 +201,17 @@ function addAccountRow() {
                     ${commonAccounts.map(account => `<option value="${account}">`).join('')}
                 </datalist>
             </div>
-            <div class="col-md-3 mb-2">
-                <label class="form-label fw-bold">Type</label>
-                <select class="form-select account-type-select" name="account_type" required>
-                    <option value="">Select Type...</option>
+            <div class="col-md-2 mb-2">
+                <label class="form-label fw-bold small">Type</label>
+                <select class="form-select form-select-sm account-type-select" name="account_type" required>
+                    <option value="">Type...</option>
                     <option value="debit">Debit</option>
                     <option value="credit">Credit</option>
                 </select>
             </div>
             <div class="col-md-4 mb-2">
-                <label class="form-label fw-bold">Amount (₹)</label>
-                <input type="number" class="form-control amount-input" 
+                <label class="form-label fw-bold small">Amount (₹)</label>
+                <input type="number" class="form-control form-control-sm amount-input" 
                        name="account_amount" 
                        placeholder="0.00" 
                        step="0.01" min="0" required>

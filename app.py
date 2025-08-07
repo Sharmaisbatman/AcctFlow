@@ -13,6 +13,13 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "accounting_pro_secret_key_2024")
 
+# Context processor to provide common template variables
+@app.context_processor
+def utility_processor():
+    def format_date(format_str='%B %d, %Y'):
+        return datetime.now().strftime(format_str)
+    return dict(format_date=format_date)
+
 # Initialize session data structure
 def init_session():
     if 'journal_entries' not in session:
@@ -129,10 +136,14 @@ def profit_loss():
     # Account classifications for P&L
     expense_keywords = ['expense', 'rent', 'salary', 'salaries', 'electricity', 'telephone', 'insurance', 
                        'depreciation', 'interest', 'commission', 'advertising', 'office', 'transport',
-                       'repairs', 'maintenance', 'audit', 'legal', 'bad debts', 'loss']
+                       'repairs', 'maintenance', 'audit', 'legal', 'bad debts', 'loss', 'wages', 'fuel',
+                       'printing', 'stationery', 'postage', 'travel', 'professional', 'consultant',
+                       'training', 'conference', 'subscription', 'license', 'tax', 'penalty', 'fine',
+                       'utilities', 'water', 'gas', 'internet', 'mobile', 'cleaning', 'security']
     
     income_keywords = ['sales', 'revenue', 'income', 'fees earned', 'interest received', 'rent received',
-                      'commission received', 'dividend', 'discount received', 'profit']
+                      'commission received', 'dividend', 'discount received', 'profit', 'service', 'consulting',
+                      'royalty', 'bonus', 'gain', 'refund', 'rebate', 'cashback', 'earned']
     
     # Calculate account balances
     accounts = defaultdict(lambda: {'debit_balance': 0, 'credit_balance': 0})
@@ -179,12 +190,15 @@ def balance_sheet():
     # Account classifications for Balance Sheet
     asset_keywords = ['cash', 'bank', 'accounts receivable', 'inventory', 'stock', 'equipment', 
                      'furniture', 'building', 'land', 'machinery', 'vehicle', 'investment',
-                     'prepaid', 'supplies', 'debtors']
+                     'prepaid', 'supplies', 'debtors', 'computer', 'laptop', 'software', 'patent',
+                     'trademark', 'goodwill', 'advance', 'deposit', 'receivable', 'asset']
     
     liability_keywords = ['accounts payable', 'creditors', 'notes payable', 'loan', 'mortgage',
-                         'accrued', 'unearned', 'tax payable', 'interest payable']
+                         'accrued', 'unearned', 'tax payable', 'interest payable', 'payable', 'outstanding',
+                         'due', 'liability', 'overdraft', 'credit card', 'borrowed']
     
-    equity_keywords = ['capital', 'retained earnings', 'drawing', 'equity', 'stock']
+    equity_keywords = ['capital', 'retained earnings', 'drawing', 'equity', 'stock', 'share',
+                      'reserve', 'surplus', 'owner']
     
     # Calculate account balances
     accounts = defaultdict(lambda: {'debit_balance': 0, 'credit_balance': 0})
