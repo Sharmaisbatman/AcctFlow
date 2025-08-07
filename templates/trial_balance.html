@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Trial Balance - Accounting Pro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4><i class="fas fa-balance-scale me-2"></i>Trial Balance</h4>
+                        <small class="text-muted">Summary of all account balances</small>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('export_csv', report_type='trial_balance') }}" class="btn btn-success me-2">
+                            <i class="fas fa-download me-1"></i>Export CSV
+                        </a>
+                        <a href="{{ url_for('ledgers') }}" class="btn btn-info">
+                            <i class="fas fa-list me-1"></i>View Ledgers
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if trial_balance %}
+                        <!-- Trial Balance Header -->
+                        <div class="text-center mb-4">
+                            <h3 class="fw-bold" style="color: #2c3e50;">Your Business Name</h3>
+                            <h4 style="color: #667eea;">Trial Balance</h4>
+                            <p class="text-muted">as on {{ moment().format('MMMM DD, YYYY') }}</p>
+                        </div>
+                        
+                        <!-- Trial Balance Table -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                        <th class="text-center fw-bold" style="width: 60%;">Particulars</th>
+                                        <th class="text-center fw-bold" style="width: 10%;">L.F.</th>
+                                        <th class="text-center fw-bold" style="width: 15%;">Dr. Balance (₹)</th>
+                                        <th class="text-center fw-bold" style="width: 15%;">Cr. Balance (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for account in trial_balance %}
+                                        <tr style="{% if loop.index % 2 == 0 %}background: #f8f9fa;{% endif %}">
+                                            <td class="fw-bold">{{ account.account }} A/c</td>
+                                            <td class="text-center">-</td>
+                                            <td class="text-end">
+                                                {% if account.debit_balance > 0 %}
+                                                    <span class="fw-bold text-success">{{ "%.2f"|format(account.debit_balance) }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                {% if account.credit_balance > 0 %}
+                                                    <span class="fw-bold text-danger">{{ "%.2f"|format(account.credit_balance) }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    
+                                    <!-- Total Row -->
+                                    <tr style="background: linear-gradient(135deg, #495057 0%, #343a40 100%); color: white;">
+                                        <td class="fw-bold fs-5 text-center">TOTAL</td>
+                                        <td></td>
+                                        <td class="text-end fw-bold fs-5">{{ "%.2f"|format(total_debit) }}</td>
+                                        <td class="text-end fw-bold fs-5">{{ "%.2f"|format(total_credit) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Balance Status -->
+                        <div class="text-center mt-4">
+                            {% if is_balanced %}
+                                <div class="alert alert-success" style="border-radius: 15px;">
+                                    <h5><i class="fas fa-check-circle me-2"></i>Trial Balance is BALANCED!</h5>
+                                    <p class="mb-0">Total Debits = Total Credits = ₹{{ "%.2f"|format(total_debit) }}</p>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning" style="border-radius: 15px;">
+                                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Trial Balance is NOT BALANCED!</h5>
+                                    <p class="mb-0">
+                                        Difference: ₹{{ "%.2f"|format((total_debit - total_credit)|abs) }}
+                                        <br><small>Please check your journal entries for errors.</small>
+                                    </p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Financial Reports Quick Access -->
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="card h-100" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                                    <div class="card-body text-center">
+                                        <h5><i class="fas fa-chart-bar me-2"></i>Profit & Loss Account</h5>
+                                        <p>Generate income statement from trial balance</p>
+                                        <a href="{{ url_for('profit_loss') }}" class="btn btn-light">
+                                            <i class="fas fa-arrow-right me-1"></i>View P&L
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white;">
+                                    <div class="card-body text-center">
+                                        <h5><i class="fas fa-file-invoice me-2"></i>Balance Sheet</h5>
+                                        <p>Generate position statement from trial balance</p>
+                                        <a href="{{ url_for('balance_sheet') }}" class="btn btn-light">
+                                            <i class="fas fa-arrow-right me-1"></i>View Balance Sheet
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-balance-scale" style="font-size: 4rem; color: #6c757d; opacity: 0.5;"></i>
+                            </div>
+                            <h4>No Trial Balance Data</h4>
+                            <p class="text-muted">Trial balance will be automatically generated from your journal entries.</p>
+                            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus me-2"></i>Create Journal Entry
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Navigation -->
+<div class="floating-action">
+    <div class="btn-group-vertical">
+        <a href="{{ url_for('profit_loss') }}" class="btn btn-success mb-2" title="P&L Account">
+            <i class="fas fa-chart-bar"></i>
+        </a>
+        <a href="{{ url_for('balance_sheet') }}" class="btn btn-info mb-2" title="Balance Sheet">
+            <i class="fas fa-file-invoice"></i>
+        </a>
+        <a href="{{ url_for('ledgers') }}" class="btn btn-warning" title="Ledgers">
+            <i class="fas fa-list"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Balance Sheet - Accounting Pro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4><i class="fas fa-file-invoice me-2"></i>Balance Sheet</h4>
+                        <small class="text-muted">Statement of financial position</small>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('profit_loss') }}" class="btn btn-success me-2">
+                            <i class="fas fa-chart-bar me-1"></i>P&L Account
+                        </a>
+                        <a href="{{ url_for('trial_balance') }}" class="btn btn-warning">
+                            <i class="fas fa-balance-scale me-1"></i>Trial Balance
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Balance Sheet Header -->
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold" style="color: #2c3e50;">YOUR BUSINESS NAME</h3>
+                        <h4 style="color: #667eea;">BALANCE SHEET</h4>
+                        <p class="text-muted">As at {{ moment().format('MMMM DD, YYYY') }}</p>
+                    </div>
+                    
+                    <!-- Balance Sheet -->
+                    <div class="row">
+                        <!-- Assets Side -->
+                        <div class="col-md-6">
+                            <div class="card h-100" style="border: 2px solid #17a2b8;">
+                                <div class="card-header text-center text-white" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                                    <h5 class="mb-0 fw-bold">ASSETS</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-sm mb-0">
+                                        <tbody>
+                                            <!-- Current Assets Section -->
+                                            <tr style="background: #e9ecef;">
+                                                <td colspan="2" class="fw-bold text-center">Current Assets:</td>
+                                            </tr>
+                                            
+                                            {% set current_assets_total = 0 %}
+                                            {% if assets %}
+                                                {% for asset in assets %}
+                                                    {% if 'cash' in asset.account.lower() or 'bank' in asset.account.lower() or 'receivable' in asset.account.lower() or 'stock' in asset.account.lower() or 'inventory' in asset.account.lower() %}
+                                                        <tr>
+                                                            <td>{{ asset.account }}</td>
+                                                            <td class="text-end">{{ "%.2f"|format(asset.amount) }}</td>
+                                                        </tr>
+                                                        {% set current_assets_total = current_assets_total + asset.amount %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                            
+                                            <!-- Default current assets if none found -->
+                                            {% if current_assets_total == 0 %}
+                                                <tr style="color: #6c757d;">
+                                                    <td>Cash</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="color: #6c757d;">
+                                                    <td>Accounts receivable</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="color: #6c757d;">
+                                                    <td>Inventory</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            <tr style="background: #f8f9fa;">
+                                                <td class="fw-bold">Total current assets</td>
+                                                <td class="text-end fw-bold">{{ "%.2f"|format(current_assets_total) }}</td>
+                                            </tr>
+                                            
+                                            <!-- Non-Current Assets Section -->
+                                            <tr style="background: #e9ecef;">
+                                                <td colspan="2" class="fw-bold text-center">Non-current assets:</td>
+                                            </tr>
+                                            
+                                            {% set fixed_assets_total = 0 %}
+                                            {% if assets %}
+                                                {% for asset in assets %}
+                                                    {% if 'equipment' in asset.account.lower() or 'furniture' in asset.account.lower() or 'building' in asset.account.lower() or 'land' in asset.account.lower() or 'machinery' in asset.account.lower() or 'vehicle' in asset.account.lower() %}
+                                                        <tr>
+                                                            <td>{{ asset.account }}</td>
+                                                            <td class="text-end">{{ "%.2f"|format(asset.amount) }}</td>
+                                                        </tr>
+                                                        {% set fixed_assets_total = fixed_assets_total + asset.amount %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                            
+                                            <!-- Default fixed assets if none found -->
+                                            {% if fixed_assets_total == 0 %}
+                                                <tr style="color: #6c757d;">
+                                                    <td>Equipment</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="color: #6c757d;">
+                                                    <td>Furniture & Fixtures</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            <tr style="background: #f8f9fa;">
+                                                <td class="fw-bold">Total non-current assets</td>
+                                                <td class="text-end fw-bold">{{ "%.2f"|format(fixed_assets_total) }}</td>
+                                            </tr>
+                                            
+                                            <!-- Total Assets -->
+                                            <tr style="background: linear-gradient(135deg, #495057 0%, #343a40 100%); color: white;">
+                                                <td class="fw-bold fs-5">Total assets</td>
+                                                <td class="text-end fw-bold fs-5">{{ "%.2f"|format(total_assets) }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Liabilities & Equity Side -->
+                        <div class="col-md-6">
+                            <div class="card h-100" style="border: 2px solid #6f42c1;">
+                                <div class="card-header text-center text-white" style="background: linear-gradient(135deg, #6f42c1 0%, #6610f2 100%);">
+                                    <h5 class="mb-0 fw-bold">LIABILITIES & STOCKHOLDERS' EQUITY</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-sm mb-0">
+                                        <tbody>
+                                            <!-- Liabilities Section -->
+                                            <tr style="background: #e9ecef;">
+                                                <td colspan="2" class="fw-bold text-center">Liabilities:</td>
+                                            </tr>
+                                            
+                                            {% if liabilities %}
+                                                {% for liability in liabilities %}
+                                                    <tr>
+                                                        <td>{{ liability.account }}</td>
+                                                        <td class="text-end">{{ "%.2f"|format(liability.amount) }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr style="color: #6c757d;">
+                                                    <td>Notes payable</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="color: #6c757d;">
+                                                    <td>Accounts payable</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="color: #6c757d;">
+                                                    <td>Accrued expenses</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            <tr style="background: #f8f9fa;">
+                                                <td class="fw-bold">Total liabilities</td>
+                                                <td class="text-end fw-bold">{{ "%.2f"|format(total_liabilities) }}</td>
+                                            </tr>
+                                            
+                                            <!-- Stockholders' Equity Section -->
+                                            <tr style="background: #e9ecef;">
+                                                <td colspan="2" class="fw-bold text-center">Stockholders' equity:</td>
+                                            </tr>
+                                            
+                                            {% if equity %}
+                                                {% for eq in equity %}
+                                                    <tr>
+                                                        <td>{{ eq.account }}</td>
+                                                        <td class="text-end">{{ "%.2f"|format(eq.amount) }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr style="color: #6c757d;">
+                                                    <td>Capital stock</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="color: #6c757d;">
+                                                    <td>Retained earnings</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            <tr style="background: #f8f9fa;">
+                                                <td class="fw-bold">Total stockholders' equity</td>
+                                                <td class="text-end fw-bold">{{ "%.2f"|format(total_equity) }}</td>
+                                            </tr>
+                                            
+                                            <!-- Total Liabilities & Equity -->
+                                            <tr style="background: linear-gradient(135deg, #495057 0%, #343a40 100%); color: white;">
+                                                <td class="fw-bold fs-5">Total liabilities & stockholders' equity</td>
+                                                <td class="text-end fw-bold fs-5">{{ "%.2f"|format(total_liabilities + total_equity) }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Balance Check -->
+                    <div class="text-center mt-4">
+                        {% set balance_difference = (total_assets - (total_liabilities + total_equity))|abs %}
+                        {% if balance_difference < 0.01 %}
+                            <div class="alert alert-success" style="border-radius: 15px;">
+                                <h5><i class="fas fa-check-circle me-2"></i>Balance Sheet is BALANCED!</h5>
+                                <p class="mb-0">Assets = Liabilities + Equity = ₹{{ "%.2f"|format(total_assets) }}</p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning" style="border-radius: 15px;">
+                                <h5><i class="fas fa-exclamation-triangle me-2"></i>Balance Sheet is NOT BALANCED!</h5>
+                                <p class="mb-0">
+                                    Difference: ₹{{ "%.2f"|format(balance_difference) }}
+                                    <br><small>Assets should equal Liabilities + Equity</small>
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Financial Ratios -->
+                    {% if total_assets > 0 and total_liabilities > 0 %}
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <div class="card text-center bg-info text-white">
+                                    <div class="card-body">
+                                        <h5>Total Assets</h5>
+                                        <h3>₹{{ "%.2f"|format(total_assets) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-center bg-warning text-white">
+                                    <div class="card-body">
+                                        <h5>Debt Ratio</h5>
+                                        <h3>{{ "%.1f"|format((total_liabilities / total_assets * 100) if total_assets > 0 else 0) }}%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-center bg-success text-white">
+                                    <div class="card-body">
+                                        <h5>Equity Ratio</h5>
+                                        <h3>{{ "%.1f"|format((total_equity / total_assets * 100) if total_assets > 0 else 0) }}%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if not assets and not liabilities and not equity %}
+                        <div class="text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-file-invoice" style="font-size: 4rem; color: #6c757d; opacity: 0.5;"></i>
+                            </div>
+                            <h4>No Balance Sheet Data Available</h4>
+                            <p class="text-muted">Balance Sheet will be generated from accounts with asset, liability, and equity keywords in their names.</p>
+                            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus me-2"></i>Add Asset/Liability Entries
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Navigation -->
+<div class="floating-action">
+    <div class="btn-group-vertical">
+        <a href="{{ url_for('profit_loss') }}" class="btn btn-success mb-2" title="P&L Account">
+            <i class="fas fa-chart-bar"></i>
+        </a>
+        <a href="{{ url_for('trial_balance') }}" class="btn btn-warning" title="Trial Balance">
+            <i class="fas fa-balance-scale"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}

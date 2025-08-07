@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Profit & Loss Account - Accounting Pro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4><i class="fas fa-chart-bar me-2"></i>Profit & Loss Account</h4>
+                        <small class="text-muted">Income statement for the current period</small>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('trial_balance') }}" class="btn btn-warning me-2">
+                            <i class="fas fa-balance-scale me-1"></i>Trial Balance
+                        </a>
+                        <a href="{{ url_for('balance_sheet') }}" class="btn btn-info">
+                            <i class="fas fa-file-invoice me-1"></i>Balance Sheet
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- P&L Header -->
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold" style="color: #2c3e50;">Your Business Name</h3>
+                        <h4 style="color: #667eea;">Profit and Loss Account</h4>
+                        <p class="text-muted">For the Year Ended {{ moment().format('MMMM DD, YYYY') }}</p>
+                    </div>
+                    
+                    <!-- P&L Statement -->
+                    <div class="row">
+                        <!-- Expenses/Debits Side -->
+                        <div class="col-md-6">
+                            <div class="card h-100" style="border: 2px solid #dc3545;">
+                                <div class="card-header text-center text-white" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                                    <h5 class="mb-0 fw-bold">EXPENSES & LOSSES</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-sm mb-0">
+                                        <tbody>
+                                            {% if expenses %}
+                                                {% for expense in expenses %}
+                                                    <tr>
+                                                        <td class="fw-bold">{{ expense.account }}</td>
+                                                        <td class="text-end fw-bold">{{ "%.2f"|format(expense.amount) }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="2" class="text-center text-muted py-3">No expense accounts found</td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            <!-- Add common expense categories if empty -->
+                                            {% if not expenses %}
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Office and Administration Expenses</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Salaries</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Rent, Rates, and Taxes</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Electricity</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Depreciation</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Interest</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            <!-- Net Profit (if profit) -->
+                                            {% if net_profit > 0 %}
+                                                <tr style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                                                    <td class="fw-bold">Net Profit (Transferred to Capital)</td>
+                                                    <td class="text-end fw-bold">{{ "%.2f"|format(net_profit) }}</td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            <!-- Total -->
+                                            <tr style="background: linear-gradient(135deg, #495057 0%, #343a40 100%); color: white;">
+                                                <td class="fw-bold fs-5">TOTAL</td>
+                                                <td class="text-end fw-bold fs-5">{{ "%.2f"|format(total_expenses + (net_profit if net_profit > 0 else 0)) }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Income/Credits Side -->
+                        <div class="col-md-6">
+                            <div class="card h-100" style="border: 2px solid #28a745;">
+                                <div class="card-header text-center text-white" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                                    <h5 class="mb-0 fw-bold">INCOME & GAINS</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-sm mb-0">
+                                        <tbody>
+                                            {% if income %}
+                                                {% for inc in income %}
+                                                    <tr>
+                                                        <td class="fw-bold">{{ inc.account }}</td>
+                                                        <td class="text-end fw-bold">{{ "%.2f"|format(inc.amount) }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="2" class="text-center text-muted py-3">No income accounts found</td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            <!-- Add common income categories if empty -->
+                                            {% if not income %}
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Sales Revenue</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Commission Received</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Rent Received</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Interest Received</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                                <tr style="background: #f8f9fa; color: #6c757d;">
+                                                    <td>Discount Received</td>
+                                                    <td class="text-end">-</td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            <!-- Net Loss (if loss) -->
+                                            {% if net_profit < 0 %}
+                                                <tr style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">
+                                                    <td class="fw-bold">Net Loss (Transferred to Capital)</td>
+                                                    <td class="text-end fw-bold">{{ "%.2f"|format(-net_profit) }}</td>
+                                                </tr>
+                                            {% endif %}
+                                            
+                                            <!-- Total -->
+                                            <tr style="background: linear-gradient(135deg, #495057 0%, #343a40 100%); color: white;">
+                                                <td class="fw-bold fs-5">TOTAL</td>
+                                                <td class="text-end fw-bold fs-5">{{ "%.2f"|format(total_income + (-net_profit if net_profit < 0 else 0)) }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Net Result Summary -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card text-center {% if net_profit > 0 %}bg-success{% elif net_profit < 0 %}bg-danger{% else %}bg-warning{% endif %} text-white">
+                                <div class="card-body">
+                                    <h4>
+                                        {% if net_profit > 0 %}
+                                            <i class="fas fa-arrow-up me-2"></i>NET PROFIT: ₹{{ "%.2f"|format(net_profit) }}
+                                        {% elif net_profit < 0 %}
+                                            <i class="fas fa-arrow-down me-2"></i>NET LOSS: ₹{{ "%.2f"|format(-net_profit) }}
+                                        {% else %}
+                                            <i class="fas fa-equals me-2"></i>BREAK EVEN: ₹0.00
+                                        {% endif %}
+                                    </h4>
+                                    <p class="mb-0">
+                                        {% if net_profit > 0 %}
+                                            Excellent! Your business is profitable.
+                                        {% elif net_profit < 0 %}
+                                            Review expenses to improve profitability.
+                                        {% else %}
+                                            Income equals expenses.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Financial Metrics -->
+                    {% if total_income > 0 %}
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <div class="card text-center bg-info text-white">
+                                    <div class="card-body">
+                                        <h5>Total Revenue</h5>
+                                        <h3>₹{{ "%.2f"|format(total_income) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-center bg-warning text-white">
+                                    <div class="card-body">
+                                        <h5>Total Expenses</h5>
+                                        <h3>₹{{ "%.2f"|format(total_expenses) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-center bg-secondary text-white">
+                                    <div class="card-body">
+                                        <h5>Profit Margin</h5>
+                                        <h3>{{ "%.1f"|format((net_profit / total_income * 100) if total_income > 0 else 0) }}%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if not income and not expenses %}
+                        <div class="text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-chart-bar" style="font-size: 4rem; color: #6c757d; opacity: 0.5;"></i>
+                            </div>
+                            <h4>No P&L Data Available</h4>
+                            <p class="text-muted">P&L Account will be generated from accounts with income and expense keywords in their names.</p>
+                            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus me-2"></i>Add Revenue/Expense Entries
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Navigation -->
+<div class="floating-action">
+    <div class="btn-group-vertical">
+        <a href="{{ url_for('balance_sheet') }}" class="btn btn-info mb-2" title="Balance Sheet">
+            <i class="fas fa-file-invoice"></i>
+        </a>
+        <a href="{{ url_for('trial_balance') }}" class="btn btn-warning" title="Trial Balance">
+            <i class="fas fa-balance-scale"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}

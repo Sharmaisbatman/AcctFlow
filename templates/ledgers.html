@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Ledgers - Accounting Pro{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4><i class="fas fa-list me-2"></i>Account Ledgers</h4>
+                        <small class="text-muted">Individual account ledgers in T-account format</small>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('journal') }}" class="btn btn-primary">
+                            <i class="fas fa-book me-1"></i>Back to Journal
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if ledgers %}
+                        {% for account_name, ledger_data in ledgers.items() %}
+                            <div class="ledger-account mb-5">
+                                <!-- Account Name Header -->
+                                <div class="text-center mb-3">
+                                    <h5 class="fw-bold" style="color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 0.5rem;">
+                                        {{ account_name }} A/c
+                                    </h5>
+                                </div>
+                                
+                                <!-- T-Account Layout -->
+                                <div class="row">
+                                    <!-- Debit Side -->
+                                    <div class="col-md-6">
+                                        <div class="card h-100" style="border: 2px solid #28a745;">
+                                            <div class="card-header text-center text-white" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                                                <strong>Dr.</strong>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <table class="table table-sm mb-0">
+                                                    <thead style="background: #f8f9fa;">
+                                                        <tr>
+                                                            <th style="width: 100px;">Date</th>
+                                                            <th>Particulars</th>
+                                                            <th style="width: 60px;">JF</th>
+                                                            <th style="width: 100px; text-align: right;">Amount(₹)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for entry in ledger_data.debit_entries %}
+                                                            <tr>
+                                                                <td>{{ entry.date }}</td>
+                                                                <td>{{ entry.particulars }}</td>
+                                                                <td>{{ entry.jf }}</td>
+                                                                <td style="text-align: right;">{{ "%.2f"|format(entry.amount) }}</td>
+                                                            </tr>
+                                                        {% else %}
+                                                            <tr>
+                                                                <td colspan="4" class="text-center text-muted py-3">No debit entries</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                        
+                                                        <!-- Balance if credit side is higher -->
+                                                        {% if ledger_data.credit_total > ledger_data.debit_total %}
+                                                            <tr style="background: #e9ecef;">
+                                                                <td colspan="3" class="fw-bold">By Balance c/d</td>
+                                                                <td style="text-align: right;" class="fw-bold">{{ "%.2f"|format(ledger_data.credit_total - ledger_data.debit_total) }}</td>
+                                                            </tr>
+                                                        {% endif %}
+                                                        
+                                                        <!-- Total -->
+                                                        <tr style="background: #28a745; color: white;">
+                                                            <td colspan="3" class="fw-bold">TOTAL</td>
+                                                            <td style="text-align: right;" class="fw-bold">{{ "%.2f"|format([ledger_data.debit_total, ledger_data.credit_total]|max) }}</td>
+                                                        </tr>
+                                                        
+                                                        <!-- Balance brought down -->
+                                                        {% if ledger_data.debit_total > ledger_data.credit_total %}
+                                                            <tr>
+                                                                <td colspan="3" class="fw-bold">To Balance b/d</td>
+                                                                <td style="text-align: right;" class="fw-bold">{{ "%.2f"|format(ledger_data.debit_total - ledger_data.credit_total) }}</td>
+                                                            </tr>
+                                                        {% endif %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Credit Side -->
+                                    <div class="col-md-6">
+                                        <div class="card h-100" style="border: 2px solid #dc3545;">
+                                            <div class="card-header text-center text-white" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                                                <strong>Cr.</strong>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <table class="table table-sm mb-0">
+                                                    <thead style="background: #f8f9fa;">
+                                                        <tr>
+                                                            <th style="width: 100px;">Date</th>
+                                                            <th>Particulars</th>
+                                                            <th style="width: 60px;">JF</th>
+                                                            <th style="width: 100px; text-align: right;">Amount(₹)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for entry in ledger_data.credit_entries %}
+                                                            <tr>
+                                                                <td>{{ entry.date }}</td>
+                                                                <td>{{ entry.particulars }}</td>
+                                                                <td>{{ entry.jf }}</td>
+                                                                <td style="text-align: right;">{{ "%.2f"|format(entry.amount) }}</td>
+                                                            </tr>
+                                                        {% else %}
+                                                            <tr>
+                                                                <td colspan="4" class="text-center text-muted py-3">No credit entries</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                        
+                                                        <!-- Balance if debit side is higher -->
+                                                        {% if ledger_data.debit_total > ledger_data.credit_total %}
+                                                            <tr style="background: #e9ecef;">
+                                                                <td colspan="3" class="fw-bold">To Balance c/d</td>
+                                                                <td style="text-align: right;" class="fw-bold">{{ "%.2f"|format(ledger_data.debit_total - ledger_data.credit_total) }}</td>
+                                                            </tr>
+                                                        {% endif %}
+                                                        
+                                                        <!-- Total -->
+                                                        <tr style="background: #dc3545; color: white;">
+                                                            <td colspan="3" class="fw-bold">TOTAL</td>
+                                                            <td style="text-align: right;" class="fw-bold">{{ "%.2f"|format([ledger_data.debit_total, ledger_data.credit_total]|max) }}</td>
+                                                        </tr>
+                                                        
+                                                        <!-- Balance brought down -->
+                                                        {% if ledger_data.credit_total > ledger_data.debit_total %}
+                                                            <tr>
+                                                                <td colspan="3" class="fw-bold">By Balance b/d</td>
+                                                                <td style="text-align: right;" class="fw-bold">{{ "%.2f"|format(ledger_data.credit_total - ledger_data.debit_total) }}</td>
+                                                            </tr>
+                                                        {% endif %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-list" style="font-size: 4rem; color: #6c757d; opacity: 0.5;"></i>
+                            </div>
+                            <h4>No Ledger Accounts Found</h4>
+                            <p class="text-muted">Ledgers will be automatically generated from your journal entries.</p>
+                            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus me-2"></i>Create Journal Entry
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Navigation -->
+<div class="floating-action">
+    <div class="btn-group-vertical">
+        <a href="{{ url_for('trial_balance') }}" class="btn btn-warning mb-2" title="Trial Balance">
+            <i class="fas fa-balance-scale"></i>
+        </a>
+        <a href="{{ url_for('journal') }}" class="btn btn-primary" title="Journal">
+            <i class="fas fa-book"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}

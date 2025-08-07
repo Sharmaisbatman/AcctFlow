@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Journal Entries - Accounting Pro{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4><i class="fas fa-book me-2"></i>Journal Entries</h4>
+                        <small class="text-muted">Complete journal with proper accounting format</small>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('export_csv', report_type='journal') }}" class="btn btn-success me-2">
+                            <i class="fas fa-download me-1"></i>Export CSV
+                        </a>
+                        <a href="{{ url_for('index') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>New Entry
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if entries %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 120px;">Date</th>
+                                        <th>Account Name</th>
+                                        <th style="width: 150px; text-align: right;">D (₹)</th>
+                                        <th style="width: 150px; text-align: right;">C (₹)</th>
+                                        <th style="width: 100px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in entries %}
+                                        {% for loop_account in entry.accounts %}
+                                            <tr {% if loop_account.type == 'debit' %}style="background: rgba(40, 167, 69, 0.05);"{% else %}style="background: rgba(220, 53, 69, 0.05);"{% endif %}>
+                                                <td>
+                                                    {% if loop.first %}
+                                                        <strong>{{ entry.date }}</strong>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if loop_account.type == 'credit' %}
+                                                        <span class="ms-4">{{ loop_account.name }}</span>
+                                                    {% else %}
+                                                        <strong>{{ loop_account.name }}</strong>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="text-align: right;">
+                                                    {% if loop_account.type == 'debit' %}
+                                                        <span class="fw-bold text-success">{{ "%.2f"|format(loop_account.amount) }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="text-align: right;">
+                                                    {% if loop_account.type == 'credit' %}
+                                                        <span class="fw-bold text-danger">{{ "%.2f"|format(loop_account.amount) }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if loop.first %}
+                                                        <a href="{{ url_for('delete_entry', entry_id=entry.id) }}" 
+                                                           class="btn btn-sm btn-outline-danger"
+                                                           onclick="return confirm('Delete this entry?')"
+                                                           title="Delete Entry">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        
+                                        <!-- Narration Row -->
+                                        <tr style="background: linear-gradient(135deg, #fff9c4 0%, #fff3b8 100%);">
+                                            <td></td>
+                                            <td colspan="4">
+                                                <em><i class="fas fa-comment me-2"></i>{{ entry.narration }}</em>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- Spacing Row -->
+                                        <tr>
+                                            <td colspan="5" style="height: 20px; border: none;"></td>
+                                        </tr>
+                                    {% endfor %}
+                                    
+                                    <!-- Grand Totals -->
+                                    <tr style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white;">
+                                        <td colspan="2" class="fw-bold fs-5">GRAND TOTAL</td>
+                                        <td style="text-align: right;" class="fw-bold fs-5">{{ "%.2f"|format(grand_debit) }}</td>
+                                        <td style="text-align: right;" class="fw-bold fs-5">{{ "%.2f"|format(grand_credit) }}</td>
+                                        <td>
+                                            {% if (grand_debit - grand_credit)|abs < 0.01 %}
+                                                <span class="badge bg-success">✓ Balanced</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">⚠ Unbalanced</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Summary Statistics -->
+                        <div class="row mt-4">
+                            <div class="col-md-3">
+                                <div class="card text-center" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                                    <div class="card-body">
+                                        <h5>Total Entries</h5>
+                                        <h2>{{ entries|length }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white;">
+                                    <div class="card-body">
+                                        <h5>Total Debit</h5>
+                                        <h2>₹{{ "%.2f"|format(grand_debit) }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">
+                                    <div class="card-body">
+                                        <h5>Total Credit</h5>
+                                        <h2>₹{{ "%.2f"|format(grand_credit) }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center" style="background: linear-gradient(135deg, #6f42c1 0%, #6610f2 100%); color: white;">
+                                    <div class="card-body">
+                                        <h5>Difference</h5>
+                                        <h2>₹{{ "%.2f"|format((grand_debit - grand_credit)|abs) }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-book-open" style="font-size: 4rem; color: #6c757d; opacity: 0.5;"></i>
+                            </div>
+                            <h4>No Journal Entries Found</h4>
+                            <p class="text-muted">Start by creating your first journal entry to see the proper accounting format here.</p>
+                            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus me-2"></i>Create First Entry
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Actions -->
+<div class="floating-action">
+    <div class="btn-group-vertical">
+        <a href="{{ url_for('index') }}" class="btn btn-primary mb-2" title="New Entry">
+            <i class="fas fa-plus"></i>
+        </a>
+        <a href="{{ url_for('ledgers') }}" class="btn btn-info mb-2" title="View Ledgers">
+            <i class="fas fa-list"></i>
+        </a>
+        <a href="{{ url_for('trial_balance') }}" class="btn btn-warning" title="Trial Balance">
+            <i class="fas fa-balance-scale"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}
