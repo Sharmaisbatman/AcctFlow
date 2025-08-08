@@ -105,8 +105,8 @@
 
 {% block scripts %}
 <script>
-// Account suggestions
-const commonAccounts = [
+// Account suggestions - using let to avoid redeclaration errors
+let commonAccounts = [
     // Assets
     'Cash', 'Petty Cash', 'Bank', 'SBI Bank', 'HDFC Bank', 'ICICI Bank', 'Axis Bank',
     'Accounts Receivable', 'Sundry Debtors', 'Trade Receivables', 'Notes Receivable',
@@ -160,6 +160,11 @@ const commonAccounts = [
 ];
 
 let accountCounter = 0;
+
+// Clear any existing interval to prevent conflicts
+if (window.accountSuggestionsClearer) {
+    clearInterval(window.accountSuggestionsClearer);
+}
 
 // Initialize form
 document.addEventListener('DOMContentLoaded', function() {

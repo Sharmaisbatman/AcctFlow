@@ -88,172 +88,278 @@ def ledgers():
 def trial_balance():
     init_session()
     
-    # Generate trial balance from journal entries
-    accounts = defaultdict(lambda: {'debit_balance': 0, 'credit_balance': 0})
+    # Generate trial balance - shows net balance of each account
+    account_balances = defaultdict(lambda: {'debit_total': 0, 'credit_total': 0, 'net_balance': 0})
     
+    # Sum up all debits and credits for each account
     for entry in session['journal_entries']:
         for account in entry['accounts']:
             account_name = account['name']
+            amount = account['amount']
+            
             if account['type'] == 'debit':
-                accounts[account_name]['debit_balance'] += account['amount']
+                account_balances[account_name]['debit_total'] += amount
             else:
-                accounts[account_name]['credit_balance'] += account['amount']
+                account_balances[account_name]['credit_total'] += amount
     
-    # Calculate net balances
-    trial_balance = []
-    total_debit = 0
-    total_credit = 0
+    # Calculate net balance and classify for trial balance
+    trial_balance_accounts = []
+    total_debit_balances = 0
+    total_credit_balances = 0
     
-    for account_name, balances in sorted(accounts.items()):
-        net_debit = balances['debit_balance'] - balances['credit_balance']
-        net_credit = balances['credit_balance'] - balances['debit_balance']
+    for account_name, balance_info in sorted(account_balances.items()):
+        debit_total = balance_info['debit_total']
+        credit_total = balance_info['credit_total']
+        net_balance = debit_total - credit_total
         
-        if net_debit > 0:
-            trial_balance.append({
-                'account': account_name,
-                'debit_balance': net_debit,
-                'credit_balance': 0
-            })
-            total_debit += net_debit
-        elif net_credit > 0:
-            trial_balance.append({
-                'account': account_name,
-                'debit_balance': 0,
-                'credit_balance': net_credit
-            })
-            total_credit += net_credit
+        # Only include accounts with non-zero balances
+        if abs(net_balance) > 0.01:
+            if net_balance > 0:
+                # Account has net debit balance
+                trial_balance_accounts.append({
+                    'account': account_name,
+                    'debit_balance': net_balance,
+                    'credit_balance': 0
+                })
+                total_debit_balances += net_balance
+            else:
+                # Account has net credit balance
+                trial_balance_accounts.append({
+                    'account': account_name,
+                    'debit_balance': 0,
+                    'credit_balance': abs(net_balance)
+                })
+                total_credit_balances += abs(net_balance)
+    
+    # Check if trial balance is balanced
+    is_balanced = abs(total_debit_balances - total_credit_balances) < 0.01
     
     return render_template('trial_balance.html', 
-                         trial_balance=trial_balance,
-                         total_debit=total_debit,
-                         total_credit=total_credit,
-                         is_balanced=abs(total_debit - total_credit) < 0.01)
+                         trial_balance=trial_balance_accounts,
+                         total_debit=total_debit_balances,
+                         total_credit=total_credit_balances,
+                         is_balanced=is_balanced)
 
 @app.route('/profit_loss')
 def profit_loss():
     init_session()
     
-    # Account classifications for P&L
-    expense_keywords = ['expense', 'rent', 'salary', 'salaries', 'electricity', 'telephone', 'insurance', 
-                       'depreciation', 'interest', 'commission', 'advertising', 'office', 'transport',
-                       'repairs', 'maintenance', 'audit', 'legal', 'bad debts', 'loss', 'wages', 'fuel',
-                       'printing', 'stationery', 'postage', 'travel', 'professional', 'consultant',
-                       'training', 'conference', 'subscription', 'license', 'tax', 'penalty', 'fine',
-                       'utilities', 'water', 'gas', 'internet', 'mobile', 'cleaning', 'security']
+    # GAAP-based P&L Account Classifications
+    # Revenue keywords - these are typically CREDIT balance accounts
+    revenue_keywords = [
+        'sales', 'revenue', 'income', 'service revenue', 'consulting income', 'fees earned',
+        'interest received', 'rent received', 'commission received', 'dividend received',
+        'discount received', 'gain on sale', 'other income', 'miscellaneous income',
+        'royalty income', 'rental income', 'service fees', 'professional fees'
+    ]
     
-    income_keywords = ['sales', 'revenue', 'income', 'fees earned', 'interest received', 'rent received',
-                      'commission received', 'dividend', 'discount received', 'profit', 'service', 'consulting',
-                      'royalty', 'bonus', 'gain', 'refund', 'rebate', 'cashback', 'earned']
+    # Expense keywords - these are typically DEBIT balance accounts
+    expense_keywords = [
+        # Cost of Goods Sold
+        'cost of goods sold', 'cogs', 'cost of sales', 'purchases', 'materials', 'inventory',
+        
+        # Operating Expenses
+        'salary', 'salaries', 'wages', 'payroll', 'benefits', 'bonus', 'commission paid',
+        'rent expense', 'office rent', 'utilities', 'electricity', 'water', 'gas',
+        'telephone', 'internet', 'mobile', 'communication',
+        'office expense', 'supplies', 'stationery', 'printing', 'postage',
+        'advertising', 'marketing', 'promotion', 'publicity',
+        'travel', 'transport', 'fuel', 'vehicle expense', 'conveyance',
+        'insurance expense', 'professional fees', 'legal fees', 'audit fees',
+        'consultant fees', 'bank charges', 'interest expense', 'loan interest',
+        'repairs', 'maintenance', 'cleaning', 'security',
+        'depreciation', 'amortization', 'bad debts', 'doubtful debts',
+        'training', 'conference', 'subscription', 'license fee',
+        'tax expense', 'penalty', 'fine', 'loss', 'miscellaneous expense'
+    ]
     
-    # Calculate account balances
-    accounts = defaultdict(lambda: {'debit_balance': 0, 'credit_balance': 0})
+    # Calculate net balances for each account
+    account_balances = defaultdict(lambda: {'debit_total': 0, 'credit_total': 0, 'net_balance': 0})
     
     for entry in session['journal_entries']:
         for account in entry['accounts']:
             account_name = account['name']
+            amount = account['amount']
+            
             if account['type'] == 'debit':
-                accounts[account_name]['debit_balance'] += account['amount']
+                account_balances[account_name]['debit_total'] += amount
             else:
-                accounts[account_name]['credit_balance'] += account['amount']
+                account_balances[account_name]['credit_total'] += amount
     
-    # Classify accounts
-    expenses = []
-    income = []
+    # Calculate net balance for each account
+    for account_name in account_balances:
+        balance_info = account_balances[account_name]
+        balance_info['net_balance'] = balance_info['debit_total'] - balance_info['credit_total']
     
-    for account_name, balances in accounts.items():
-        net_balance = balances['debit_balance'] - balances['credit_balance']
+    # Classify accounts for P&L based on GAAP principles
+    revenue_accounts = []
+    expense_accounts = []
+    
+    for account_name, balance_info in account_balances.items():
         account_lower = account_name.lower()
+        net_balance = balance_info['net_balance']
         
-        # Check if it's an expense account (typically debit balance)
-        if any(keyword in account_lower for keyword in expense_keywords) and net_balance > 0:
-            expenses.append({'account': account_name, 'amount': net_balance})
+        # Revenue Classification: Credit balance accounts with revenue keywords
+        if any(keyword in account_lower for keyword in revenue_keywords):
+            if net_balance < 0:  # Credit balance (normal for revenue)
+                revenue_accounts.append({
+                    'account': account_name, 
+                    'amount': abs(net_balance)  # Show as positive amount
+                })
         
-        # Check if it's an income account (typically credit balance)
-        elif any(keyword in account_lower for keyword in income_keywords) and net_balance < 0:
-            income.append({'account': account_name, 'amount': abs(net_balance)})
+        # Expense Classification: Debit balance accounts with expense keywords
+        elif any(keyword in account_lower for keyword in expense_keywords):
+            if net_balance > 0:  # Debit balance (normal for expenses)
+                expense_accounts.append({
+                    'account': account_name,
+                    'amount': net_balance
+                })
     
-    total_expenses = sum(exp['amount'] for exp in expenses)
-    total_income = sum(inc['amount'] for inc in income)
-    net_profit = total_income - total_expenses
+    # Calculate totals
+    total_revenue = sum(acc['amount'] for acc in revenue_accounts)
+    total_expenses = sum(acc['amount'] for acc in expense_accounts)
+    net_profit = total_revenue - total_expenses
     
     return render_template('profit_loss.html',
-                         expenses=expenses,
-                         income=income,
+                         expenses=expense_accounts,
+                         income=revenue_accounts,
                          total_expenses=total_expenses,
-                         total_income=total_income,
+                         total_income=total_revenue,
                          net_profit=net_profit)
 
 @app.route('/balance_sheet')
 def balance_sheet():
     init_session()
     
-    # Account classifications for Balance Sheet
-    asset_keywords = ['cash', 'bank', 'accounts receivable', 'inventory', 'stock', 'equipment', 
-                     'furniture', 'building', 'land', 'machinery', 'vehicle', 'investment',
-                     'prepaid', 'supplies', 'debtors', 'computer', 'laptop', 'software', 'patent',
-                     'trademark', 'goodwill', 'advance', 'deposit', 'receivable', 'asset']
+    # GAAP-based Balance Sheet Classifications
+    # Current Assets (converted to cash within 1 year)
+    current_asset_keywords = [
+        'cash', 'petty cash', 'bank', 'checking', 'savings', 'money market',
+        'accounts receivable', 'trade receivables', 'notes receivable', 'debtors',
+        'inventory', 'stock', 'merchandise', 'raw materials', 'finished goods',
+        'prepaid expenses', 'prepaid rent', 'prepaid insurance', 'supplies',
+        'short-term investment', 'marketable securities'
+    ]
     
-    liability_keywords = ['accounts payable', 'creditors', 'notes payable', 'loan', 'mortgage',
-                         'accrued', 'unearned', 'tax payable', 'interest payable', 'payable', 'outstanding',
-                         'due', 'liability', 'overdraft', 'credit card', 'borrowed']
+    # Non-Current Assets (long-term assets)
+    non_current_asset_keywords = [
+        'land', 'building', 'equipment', 'machinery', 'furniture', 'fixtures',
+        'vehicle', 'motor car', 'truck', 'computer', 'laptop', 'software',
+        'patent', 'trademark', 'goodwill', 'long-term investment',
+        'property', 'plant', 'intangible', 'fixed asset'
+    ]
     
-    equity_keywords = ['capital', 'retained earnings', 'drawing', 'equity', 'stock', 'share',
-                      'reserve', 'surplus', 'owner']
+    # Current Liabilities (due within 1 year)
+    current_liability_keywords = [
+        'accounts payable', 'trade payables', 'notes payable', 'creditors',
+        'accrued expenses', 'accrued liabilities', 'wages payable', 'salary payable',
+        'interest payable', 'tax payable', 'short-term loan', 'credit card',
+        'overdraft', 'current portion', 'unearned revenue'
+    ]
     
-    # Calculate account balances
-    accounts = defaultdict(lambda: {'debit_balance': 0, 'credit_balance': 0})
+    # Non-Current Liabilities (due after 1 year)
+    non_current_liability_keywords = [
+        'long-term loan', 'mortgage', 'bonds payable', 'deferred tax',
+        'pension liability', 'long-term debt'
+    ]
+    
+    # Equity accounts
+    equity_keywords = [
+        'capital', 'owner capital', 'share capital', 'common stock', 'preferred stock',
+        'additional paid-in capital', 'retained earnings', 'reserve', 'surplus',
+        'drawing', 'owner drawing', 'dividends', 'treasury stock'
+    ]
+    
+    # Calculate net balances for each account
+    account_balances = defaultdict(lambda: {'debit_total': 0, 'credit_total': 0, 'net_balance': 0})
     
     for entry in session['journal_entries']:
         for account in entry['accounts']:
             account_name = account['name']
+            amount = account['amount']
+            
             if account['type'] == 'debit':
-                accounts[account_name]['debit_balance'] += account['amount']
+                account_balances[account_name]['debit_total'] += amount
             else:
-                accounts[account_name]['credit_balance'] += account['amount']
+                account_balances[account_name]['credit_total'] += amount
     
-    # Classify accounts
-    assets = []
-    liabilities = []
-    equity = []
+    # Calculate net balance for each account
+    for account_name in account_balances:
+        balance_info = account_balances[account_name]
+        balance_info['net_balance'] = balance_info['debit_total'] - balance_info['credit_total']
     
-    for account_name, balances in accounts.items():
-        net_balance = balances['debit_balance'] - balances['credit_balance']
+    # Classify accounts based on GAAP principles
+    current_assets = []
+    non_current_assets = []
+    current_liabilities = []
+    non_current_liabilities = []
+    equity_accounts = []
+    
+    for account_name, balance_info in account_balances.items():
         account_lower = account_name.lower()
+        net_balance = balance_info['net_balance']
         
-        # Assets (typically debit balance)
-        if any(keyword in account_lower for keyword in asset_keywords):
+        # Skip P&L accounts (revenue/expense) - they belong in Income Statement
+        revenue_keywords = ['sales', 'revenue', 'income', 'interest received', 'rent received']
+        expense_keywords = ['expense', 'salary', 'rent expense', 'cost of goods sold']
+        
+        is_pnl_account = (any(keyword in account_lower for keyword in revenue_keywords) or 
+                         any(keyword in account_lower for keyword in expense_keywords))
+        
+        if is_pnl_account:
+            continue  # Skip P&L accounts in Balance Sheet
+        
+        # Current Assets: Debit balance accounts
+        if any(keyword in account_lower for keyword in current_asset_keywords):
             if net_balance > 0:
-                assets.append({'account': account_name, 'amount': net_balance})
+                current_assets.append({'account': account_name, 'amount': net_balance})
         
-        # Liabilities (typically credit balance)
-        elif any(keyword in account_lower for keyword in liability_keywords):
+        # Non-Current Assets: Debit balance accounts
+        elif any(keyword in account_lower for keyword in non_current_asset_keywords):
+            if net_balance > 0:
+                non_current_assets.append({'account': account_name, 'amount': net_balance})
+        
+        # Current Liabilities: Credit balance accounts
+        elif any(keyword in account_lower for keyword in current_liability_keywords):
             if net_balance < 0:
-                liabilities.append({'account': account_name, 'amount': abs(net_balance)})
+                current_liabilities.append({'account': account_name, 'amount': abs(net_balance)})
         
-        # Equity (typically credit balance, but drawings are debit)
+        # Non-Current Liabilities: Credit balance accounts
+        elif any(keyword in account_lower for keyword in non_current_liability_keywords):
+            if net_balance < 0:
+                non_current_liabilities.append({'account': account_name, 'amount': abs(net_balance)})
+        
+        # Equity: Mostly credit balance (except drawings)
         elif any(keyword in account_lower for keyword in equity_keywords):
-            if 'drawing' in account_lower and net_balance > 0:
-                equity.append({'account': account_name, 'amount': -net_balance})  # Drawings reduce equity
-            elif 'drawing' not in account_lower and net_balance < 0:
-                equity.append({'account': account_name, 'amount': abs(net_balance)})
+            if 'drawing' in account_lower:
+                # Drawings have debit balance and reduce equity
+                if net_balance > 0:
+                    equity_accounts.append({'account': account_name, 'amount': -net_balance})
+            else:
+                # Other equity accounts have credit balance
+                if net_balance < 0:
+                    equity_accounts.append({'account': account_name, 'amount': abs(net_balance)})
     
-    # Calculate net profit from P&L and add to equity
-    # (This is a simplified approach - in practice, this would come from the P&L statement)
+    # Combine assets
+    all_assets = current_assets + non_current_assets
+    all_liabilities = current_liabilities + non_current_liabilities
     
-    total_assets = sum(asset['amount'] for asset in assets)
-    total_liabilities = sum(liability['amount'] for liability in liabilities)
-    total_equity = sum(eq['amount'] for eq in equity)
+    # Calculate totals
+    total_assets = sum(asset['amount'] for asset in all_assets)
+    total_liabilities = sum(liability['amount'] for liability in all_liabilities)
+    total_equity = sum(eq['amount'] for eq in equity_accounts)
     
-    # Add retained earnings to balance the equation
+    # Add net profit from P&L to equity (basic approach)
+    # In a real system, this would be calculated from the P&L statement
     retained_earnings = total_assets - total_liabilities - total_equity
     if abs(retained_earnings) > 0.01:
-        equity.append({'account': 'Retained Earnings', 'amount': retained_earnings})
+        equity_accounts.append({'account': 'Retained Earnings', 'amount': retained_earnings})
         total_equity += retained_earnings
     
     return render_template('balance_sheet.html',
-                         assets=assets,
-                         liabilities=liabilities,
-                         equity=equity,
+                         assets=all_assets,
+                         liabilities=all_liabilities,
+                         equity=equity_accounts,
                          total_assets=total_assets,
                          total_liabilities=total_liabilities,
                          total_equity=total_equity)
